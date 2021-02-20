@@ -15,7 +15,9 @@
     <meta name="theme-color" content="#ffffff">
   </head>
   <body>
-    We really rocking now!<br>
+    <div id="myDiv">
+      We really rocking now!<br>
+    </div>
     <iframe width="560" 
             height="315" 
             src="https://www.youtube.com/embed/4QXDC8Z44z4?autoplay=1" 
@@ -29,4 +31,9 @@
             allowfullscreen>
     </iframe>
   </body>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register("/sw.js");
+    }
+  </script>
 <html>
