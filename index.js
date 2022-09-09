@@ -147,7 +147,7 @@ let pageCurrent;
 
 //  "http://99.233.12.190:3000"; "http://192.168.0.13:3000"; "http://192.168.0.2:3000";
 
-const serverLocation = "http://192.168.0.13:3000";
+const serverLocation = "http://99.233.12.190:3000";
 
 if (!localStorage.getItem("pageCurrent")) {
   localStorage.setItem("pageCurrent", "0");
