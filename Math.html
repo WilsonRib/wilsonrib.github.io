@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Equation Editor</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        #display {
+            border: 1px solid #ccc;
+            padding: 20px;
+            min-height: 100px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+        }
+        #keyboard {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #f0f0f0;
+        }
+        .shift-on {
+            background: #e0e0ff;
+        }
+        .exp-on {
+            background: #ffe0e0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Math Equation Editor</h1>
+    <div id="display">\( \)</div>
+    <div id="keyboard"></div>
+
+    <script>
+        let equation = '';
+        let isShift = false;
+        let isExponent = false;
+
+        const normalSymbols = [
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            '+', '-', '*', '/', '=', '(', ')', '{', '}', '[',
+            ']', '.', ',', 'pi', 'sin', 'cos', 'tan', 'log', 'ln', 'sqrt',
+            'frac', 'sum', 'int', '<', '>', 'Shift', 'Exp', 'Space', 'Back', 'Clear'
+        ];
+
+        const shiftSymbols = [
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'pm', 'mp', 'cdot', 'div', 'neq', 'leq', 'geq', 'infty', 'subset', 'cup',
+            'cap', 'approx', 'cong', 'theta', 'alpha', 'beta', 'gamma', 'delta', 'phi', 'sigma',
+            'frac', 'sum', 'int', 'll', 'gg', 'Shift', 'Exp', 'Space', 'Back', 'Clear'
+        ];
+
+        function createKeyboard() {
+            const keyboard = document.getElementById('keyboard');
+            keyboard.innerHTML = '';
+            
+            const symbols = isShift ? shiftSymbols : normalSymbols;
+            
+            symbols.forEach(symbol => {
+                const button = document.createElement('button');
+                button.textContent = symbol === 'pi' ? 'π' : 
+                                   symbol === 'infty' ? '∞' : 
+                                   symbol === 'leq' ? '≤' : 
+                                   symbol === 'geq' ? '≥' : 
+                                   symbol === 'neq' ? '≠' : 
+                                   symbol === 'pm' ? '±' : 
+                                   symbol === 'mp' ? '∓' : 
+                                   symbol === 'cdot' ? '⋅' : 
+                                   symbol === 'theta' ? 'θ' : 
+                                   symbol === 'alpha' ? 'α' : 
+                                   symbol === 'beta' ? 'β' : 
+                                   symbol === 'gamma' ? 'γ' : 
+                                   symbol === 'delta' ? 'δ' : 
+                                   symbol === 'phi' ? 'φ' : 
+                                   symbol === 'sigma' ? 'σ' : 
+                                   symbol;
+                button.onclick = () => handleInput(symbol);
+                if (symbol === 'Shift' && isShift) button.classList.add('shift-on');
+                if (symbol === 'Exp' && isExponent) button.classList.add('exp-on');
+                keyboard.appendChild(button);
+            });
+        }
+
+        function handleInput(symbol) {
+            if (symbol === 'Shift') {
+                isShift = !isShift;
+                createKeyboard();
+                return;
+            }
+            
+            if (symbol === 'Exp') {
+                isExponent = !isExponent;
+                createKeyboard();
+                return;
+            }
+
+            if (symbol === 'Clear') {
+                equation = '';
+            } else if (symbol === 'Back') {
+                equation = equation.slice(0, -1);
+            } else if (symbol === 'Space') {
+                equation += ' ';
+            } else {
+                let latexSymbol = symbol;
+                switch(symbol) {
+                    case 'frac':
+                        latexSymbol = isExponent ? '^{ }' : '\\frac{}{}';
+                        break;
+                    case 'sqrt':
+                        latexSymbol = '\\sqrt{}';
+                        break;
+                    case 'sum':
+                        latexSymbol = '\\sum_{}^{}';
+                        break;
+                    case 'int':
+                        latexSymbol = '\\int_{}^{}';
+                        break;
+                    case 'pi':
+                        latexSymbol = '\\pi';
+                        break;
+                    case 'infty':
+                        latexSymbol = '\\infty';
+                        break;
+                    default:
+                        if (isExponent && '0123456789'.includes(symbol)) {
+                            latexSymbol = `^{${symbol}}`;
+                        }
+                }
+                equation += latexSymbol;
+            }
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const display = document.getElementById('display');
+            display.textContent = `\\(${equation}\\)`;
+            MathJax.typeset();
+        }
+
+        // Initialize keyboard
+        createKeyboard();
+    </script>
+</body>
+</html>
