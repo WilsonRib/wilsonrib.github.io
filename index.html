@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Equation Editor</title>
-    <!-- Load MathJax for rendering math equations -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <title>Math Keyboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,102 +11,126 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            background-color: #f0f0f0;
         }
-        #equationInput {
-            width: 80%;
+        #display {
+            width: 500px;
             height: 100px;
-            font-size: 18px;
-            padding: 10px;
-            margin-bottom: 10px;
-            resize: vertical;
-        }
-        #equationDisplay {
-            width: 80%;
-            min-height: 100px;
-            padding: 10px;
-            border: 1px solid #ccc;
+            border: 2px solid #333;
             margin-bottom: 20px;
-            background-color: #f9f9f9;
+            padding: 10px;
+            font-size: 24px;
+            background-color: white;
+            overflow-y: auto;
         }
         .keyboard {
             display: grid;
-            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 1fr);
             gap: 5px;
-            margin-bottom: 20px;
+            width: 500px;
         }
-        .key {
-            width: 60px;
-            height: 60px;
-            font-size: 20px;
-            border: 1px solid #ddd;
+        .row {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+        }
+        button {
+            padding: 15px;
+            font-size: 18px;
             background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        .key:hover {
-            background-color: #f0f0f0;
+        button:hover {
+            background-color: #e0e0e0;
+        }
+        .shift-on {
+            background-color: #90ee90;
         }
     </style>
 </head>
 <body>
-    <h1>Math Equation Editor</h1>
-    <textarea id="equationInput" placeholder="Type your equation in LaTeX (e.g., x^2 + \frac{1}{2})"></textarea>
-    <div id="equationDisplay">\( \text{Your equation will appear here} \)</div>
-    <div class="keyboard">
-        <div class="key" data-symbol="^">^</div>
-        <div class="key" data-symbol="\frac{}{}">/</div>
-        <div class="key" data-symbol="\sqrt{}">√</div>
-        <div class="key" data-symbol="\int">∫</div>
-        <div class="key" data-symbol="\sum">∑</div>
-        <div class="key" data-symbol="\pi">π</div>
-        <div class="key" data-symbol="\alpha">α</div>
-        <div class="key" data-symbol="\beta">β</div>
-        <div class="key" data-symbol="\infty">∞</div>
-        <div class="key" data-symbol="\pm">±</div>
-        <div class="key" data-symbol="(">(</div>
-        <div class="key" data-symbol=")">)</div>
-        <div class="key" data-symbol="{"> {</div>
-        <div class="key" data-symbol="}"> }</div>
-        <div class="key" data-symbol="\times">×</div>
-    </div>
+    <div id="display"></div>
+    <div class="keyboard" id="keyboard"></div>
 
     <script>
-        const input = document.getElementById('equationInput');
-        const display = document.getElementById('equationDisplay');
-        const keys = document.querySelectorAll('.key');
+        const display = document.getElementById('display');
+        const keyboard = document.getElementById('keyboard');
+        
+        // Define two sets of symbols: normal and shifted
+        const normalKeys = [
+            '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+            '+', '-', '×', '÷', '(', ')', '=', '.', 'Back', 'Return',
+            'x', 'y', 'z', '^', '√', 'π', 'sin', 'cos', 'tan', 'Shift',
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+            'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'
+        ];
 
-        // Update display when typing
-        input.addEventListener('input', updateDisplay);
+        const shiftedKeys = [
+            '!', '@', '#', '$', '%', '&', '*', '∞', '∑', '∏',
+            '≤', '≥', '≠', '≈', '[', ']', '∫', '∆', 'Back', 'Return',
+            'X²', 'X³', 'log', 'ln', '∧', '∨', 'asin', 'acos', 'atan', 'Shift',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+            'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'
+        ];
 
-        // Add symbol to input when key is clicked
-        keys.forEach(key => {
-            key.addEventListener('click', () => {
-                const symbol = key.dataset.symbol;
-                const cursorPos = input.selectionStart;
-                const text = input.value;
-                input.value = text.slice(0, cursorPos) + symbol + text.slice(cursorPos);
-                input.focus();
-                input.setSelectionRange(cursorPos + symbol.length, cursorPos + symbol.length);
-                updateDisplay();
-            });
-        });
+        let isShifted = false;
 
-        // Function to update the equation display
-        function updateDisplay() {
-            const latex = input.value.trim();
-            if (latex) {
-                display.innerHTML = `\\(${latex}\\)`;
-                MathJax.typesetPromise([display]).catch(err => console.log(err));
-            } else {
-                display.innerHTML = '\\(\\text{Your equation will appear here}\\)';
-                MathJax.typesetPromise([display]);
+        // Create keyboard
+        function createKeyboard() {
+            keyboard.innerHTML = '';
+            const currentKeys = isShifted ? shiftedKeys : normalKeys;
+            
+            for (let i = 0; i < 5; i++) {
+                const row = document.createElement('div');
+                row.className = 'row';
+                for (let j = 0; j < 10; j++) {
+                    const keyIndex = i * 10 + j;
+                    const button = document.createElement('button');
+                    button.textContent = currentKeys[keyIndex];
+                    button.addEventListener('click', () => handleKeyPress(currentKeys[keyIndex]));
+                    if (currentKeys[keyIndex] === 'Shift' && isShifted) {
+                        button.classList.add('shift-on');
+                    }
+                    row.appendChild(button);
+                }
+                keyboard.appendChild(row);
             }
         }
 
-        // Initial render
-        updateDisplay();
+        // Handle key presses
+        function handleKeyPress(key) {
+            if (key === 'Back') {
+                display.textContent = display.textContent.slice(0, -1);
+            } else if (key === 'Return') {
+                display.textContent += '\n';
+            } else if (key === 'Shift') {
+                isShifted = !isShifted;
+                createKeyboard();
+            } else {
+                // Handle special cases
+                switch(key) {
+                    case '×':
+                        display.textContent += '*';
+                        break;
+                    case '÷':
+                        display.textContent += '/';
+                        break;
+                    case 'X²':
+                        display.textContent += '^2';
+                        break;
+                    case 'X³':
+                        display.textContent += '^3';
+                        break;
+                    default:
+                        display.textContent += key;
+                }
+            }
+        }
+
+        // Initial keyboard creation
+        createKeyboard();
     </script>
 </body>
 </html>
